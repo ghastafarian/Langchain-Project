@@ -36,7 +36,7 @@ vectorstore = Pinecone(
 
 #intialize prompt. This defines the context of the question being asked, to help narrow down the correct answer.
 template= """
-You are an expert data scientist with an expertise in building deep learning models.
+You want to learn more about Sumanth.
 
 {context}
 

@@ -4,9 +4,6 @@ This project is designed to run Langchain and Chainlit. Langchain will pull docs
 
 ## To Do still.
 
-- Utilize templates from Langchain in Chainlit methods
-- Add more sample docs to Pinecone
-- Utilize docs in Langchain
 - Upload finished app to CloudFormation
 - Research Mileverse
 
