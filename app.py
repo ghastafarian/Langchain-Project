@@ -21,7 +21,7 @@ pinecone.init(
     environment=os.getenv('PINECONE_ENV')  
 )
 #initialize embeddings
-model_name = "gpt-3.5-turbo"
+model_name = "text-embedding-ada-002"
 embed = OpenAIEmbeddings(
     model=model_name,
     openai_api_key=os.getenv('OPENAI_API_KEY')
@@ -36,9 +36,11 @@ vectorstore = Pinecone(
 
 #intialize prompt. This defines the context of the question being asked, to help narrow down the correct answer.
 template= """
-You want to learn more about Sumanth.
+The following information is data from IMDB about certain movies and tv shows, their genres, earnings, ratings, and summaries
 
 {context}
+
+Using this information, answer the following question. The question may ask about specific movies and tv shows, or it may ask about trends.
 
 Question: {question}"""
 
@@ -50,15 +52,20 @@ PROMPT = PromptTemplate(
 chain_type_kwargs = {"prompt": PROMPT}
 
 #method
-@cl.langchain_factory(use_async=True)
+@cl.on_chat_start
 def main():
     #initialize RetrievalQA. This looks through the vectors in the vectorstore, and retrieves the best answer based on the prompt template.
-    qa = RetrievalQA.from_chain_type(
+    llm_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
     retriever=vectorstore.as_retriever(),
     chain_type_kwargs=chain_type_kwargs
     )
-    #running qa to ask a question
-    return qa
+    #setting qa as the user session
+    cl.user_session.set("llm_chain", llm_chain)
 
+@cl.on_message
+async def main(message: str):
+    llm_chain = cl.user_session.get("llm_chain")
+    res = await llm_chain.acall(message, callbacks=[cl.AsyncLangchainCallbackHandler()])
+    await cl.Message(content=res["result"]).send()
